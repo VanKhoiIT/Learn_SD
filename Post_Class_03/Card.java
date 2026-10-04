@@ -1,7 +1,6 @@
 import java.util.Objects;
 
 public class Card implements Comparable<Card> {
-
     private final Rank aRank;
     private final Suit aSuit;
 
@@ -26,12 +25,10 @@ public class Card implements Comparable<Card> {
 
     @Override
     public boolean equals(Object pObject) {
-        if (this == pObject) {
+        if (this == pObject)
             return true;
-        }
-        if (pObject == null || getClass() != pObject.getClass()) {
+        if (pObject == null || getClass() != pObject.getClass())
             return false;
-        }
         Card card = (Card) pObject;
         return aRank == card.aRank && aSuit == card.aSuit;
     }

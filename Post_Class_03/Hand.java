@@ -54,7 +54,7 @@ public class Hand implements Iterable<Card>, Comparable<Hand> {
     }
 
     public HandType getHandType() {
-        assert aCards.size() == 5 : "Chi xep hang khi bo bai co du 5 la";
+        assert aCards.size() == 5 : "Hand must have exactly 5 cards to determine rank";
 
         boolean flush = isFlush();
         boolean straight = isStraight();
@@ -101,25 +101,29 @@ public class Hand implements Iterable<Card>, Comparable<Hand> {
         return true;
     }
 
+    /**
+     * Ho tro ca Sanh At thap (A, 2, 3, 4, 5) va Sanh At cao (10, J, Q, K, A)
+     */
     private boolean isStraight() {
-        List<Card> sortedCards = new ArrayList<>(aCards);
-        sortedCards.sort(Comparator.comparing(Card::getRank));
+        List<Card> sorted = new ArrayList<>(aCards);
+        sorted.sort(Comparator.comparing(Card::getRank));
 
-        // Sảnh Át thấp: 2, 3, 4, 5, ACE
-        boolean isAceLow = sortedCards.get(0).getRank().ordinal() == 0
-                && sortedCards.get(1).getRank().ordinal() == 1
-                && sortedCards.get(2).getRank().ordinal() == 2
-                && sortedCards.get(3).getRank().ordinal() == 3
-                && sortedCards.get(4).getRank().ordinal() == 12;
+        // Sanh At cao (10, J, Q, K, ACE dung dau voi ordinal 0)
+        boolean isAceHigh = sorted.get(0).getRank() == Rank.ACE
+                && sorted.get(1).getRank() == Rank.TEN
+                && sorted.get(2).getRank() == Rank.JACK
+                && sorted.get(3).getRank() == Rank.QUEEN
+                && sorted.get(4).getRank() == Rank.KING;
 
-        if (isAceLow) {
+        if (isAceHigh) {
             return true;
         }
 
-        for (int i = 0; i < sortedCards.size() - 1; i++) {
-            int currentOrdinal = sortedCards.get(i).getRank().ordinal();
-            int nextOrdinal = sortedCards.get(i + 1).getRank().ordinal();
-            if (nextOrdinal - currentOrdinal != 1) {
+        // Sanh lien ke thong thuong (bao gom ca A, 2, 3, 4, 5)
+        for (int i = 0; i < sorted.size() - 1; i++) {
+            int current = sorted.get(i).getRank().ordinal();
+            int next = sorted.get(i + 1).getRank().ordinal();
+            if (next - current != 1) {
                 return false;
             }
         }
@@ -134,6 +138,22 @@ public class Hand implements Iterable<Card>, Comparable<Hand> {
         return counts;
     }
 
+    // ==============================================================
+    // PHẦN 1: BẢN CƠ BẢN (Theo đúng 2 gợi ý của đề bài 12)
+    // Cùng loại bài coi như bằng nhau (trả về 0)
+    // ==============================================================
+    @Override
+    public int compareTo(Hand pHand) {
+        if (this.size() != 5 || pHand.size() != 5) {
+            return Integer.compare(this.size(), pHand.size());
+        }
+        return this.getHandType().compareTo(pHand.getHandType());
+    }
+
+    // ==============================================================
+    // PHẦN 2: BẢN NÂNG CAO (Loại bỏ đơn giản hóa - Tie Breaker)
+    // Phân định thắng thua chi tiết khi cùng HandType
+    // ==============================================================
     private List<Rank> getTieBreakerRanks() {
         Map<Rank, Integer> counts = getRankCounts();
         List<Rank> ranks = new ArrayList<>(counts.keySet());
@@ -149,35 +169,24 @@ public class Hand implements Iterable<Card>, Comparable<Hand> {
         return ranks;
     }
 
-    @Override
-    public int compareTo(Hand pHand) {
-        if (this.size() < 5 || pHand.size() < 5) {
-            return Integer.compare(this.size(), pHand.size());
-        }
-
-        int typeComparison = this.getHandType().compareTo(pHand.getHandType());
-        if (typeComparison != 0) {
-            return typeComparison;
-        }
-
-        List<Rank> myRanks = this.getTieBreakerRanks();
-        List<Rank> otherRanks = pHand.getTieBreakerRanks();
-
-        for (int i = 0; i < myRanks.size(); i++) {
-            int rankComparison = myRanks.get(i).compareTo(otherRanks.get(i));
-            if (rankComparison != 0) {
-                return rankComparison;
+    public static Comparator<Hand> createTieBreakerComparator() {
+        return (h1, h2) -> {
+            int baseCompare = h1.compareTo(h2);
+            if (baseCompare != 0) {
+                return baseCompare;
             }
-        }
 
-        return 0;
-    }
+            // Neu cung loai bai, xet chi tiet cac quan bai
+            List<Rank> r1 = h1.getTieBreakerRanks();
+            List<Rank> r2 = h2.getTieBreakerRanks();
 
-    public static Comparator<Hand> createAscendingComparator() {
-        return Hand::compareTo;
-    }
-
-    public static Comparator<Hand> createDescendingComparator() {
-        return Collections.reverseOrder(Hand::compareTo);
+            for (int i = 0; i < r1.size(); i++) {
+                int cmp = r1.get(i).compareTo(r2.get(i));
+                if (cmp != 0) {
+                    return cmp;
+                }
+            }
+            return 0;
+        };
     }
 }
