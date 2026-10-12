@@ -1,0 +1,7 @@
+bin/
+*.class
+.vscode/
+.idea/
+*.iml
+BAO_CAO_BAI_TAP.docx
+generate_docx.py
