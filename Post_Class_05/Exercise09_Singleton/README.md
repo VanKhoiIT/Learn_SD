@@ -1,14 +1,4 @@
-# BÁO CÁO BÀI TẬP THỰC HÀNH: POST-CLASS 05
-**Môn học:** Thiết kế phần mềm (Software Design)  
-**Bài tập:** Exercise 9 - Chapter 4 (Thiết kế lại `GameModel` áp dụng mẫu Singleton)  
-**Sinh viên thực hiện:** [Họ và tên sinh viên]  
-**Mã số sinh viên:** [MSSV]  
-**Lớp / Nhóm:** [Tên lớp/nhóm]  
-
----
-
 ## I. YÊU CẦU ĐỀ BÀI (EXERCISE 9 - CHAPTER 4)
-
 Đề bài yêu cầu:
 > *"Using the Singleton Design Pattern, design a GameModel class that is a Singleton. The class should have a single instance variable of type Deck and initialize the deck whenever a newGame() method is called. The class can remain a stub, meaning that it does not need to do anything else."*
 
