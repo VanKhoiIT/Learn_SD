@@ -1,8 +1,13 @@
-*.class
-designbook/
+# Build outputs
 bin/
+target/
+*.class
+
+# Temporary & report files
 *.docx
 *.log
+
+# IDE metadata
 .vscode/
 .idea/
 .settings/
