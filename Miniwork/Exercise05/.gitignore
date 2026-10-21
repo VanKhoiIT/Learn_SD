@@ -1,0 +1,10 @@
+*.class
+designbook/
+bin/
+*.docx
+*.log
+.vscode/
+.idea/
+.settings/
+.classpath
+.project
