@@ -1,87 +1,161 @@
-# TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN – ĐHQG-HCM
-## KHOA CÔNG NGHỆ PHẦN MỀM
+## I. YÊU CẦU ĐỀ BÀI (EXERCISE 8 - CHAPTER 4)
 
----
-
-# BÁO CÁO BÀI TẬP THỰC HÀNH THIẾT KẾ PHẦN MỀM
-### BÀI TẬP 08 (CHAPTER 4): HIỆN THỰC VÀ ĐO LƯỜNG HIỆU NĂNG MẪU THIẾT KẾ FLYWEIGHT (EAGER VS. LAZY INITIALIZATION)
-
----
-
-### THÔNG TIN CHUNG
-* **Môn học:** Thiết kế phần mềm (Software Design)
-* **Bài tập:** Exercise 08 – Chapter 4: Object State
-* **Giáo trình tham chiếu:** *Introduction to Software Design with Java* – GS. Martin P. Robillard, Nhà xuất bản Springer
-* **Giảng viên hướng dẫn:** [Thầy/Cô phụ trách môn học]
-* **Sinh viên thực hiện:** Trương Văn Khôi (Email: truongvankhoi20055@gmail.com)
-
----
-
-## 1. MỤC TIÊU
-Bài thực hành hướng đến việc trang bị và rèn luyện các kiến thức, kỹ năng chuyên sâu sau:
-1. **Lý thuyết thiết kế hướng đối tượng:** Nắm vững bản chất của mẫu thiết kế Flyweight (Mẫu Ruồi nhẹ - thuộc nhóm Structural Pattern của GoF). Hiểu rõ kỹ thuật phân tách trạng thái thành **Trạng thái nội tại (Intrinsic State)** (bất biến, dùng chung) và **Trạng thái ngoại tại (Extrinsic State)** (thay đổi theo ngữ cảnh) để tối ưu hóa bộ nhớ.
-2. **Kỹ thuật quản lý thể hiện đối tượng:** So sánh và làm chủ hai chiến lược khởi tạo trong Flyweight:
-   - **Khởi tạo sớm (Eager Pre-initialization):** Khởi tạo sẵn toàn bộ các đối tượng hợp lệ lúc nạp lớp (Class Loading).
-   - **Khởi tạo theo nhu cầu (Lazy Creation / On-demand):** Đối tượng chỉ được khởi tạo khi có lời gọi phương thức lần đầu tiên.
-3. **Kỹ năng đo lường hiệu năng (Micro-benchmarking trên JVM):**
-   - Phân biệt độ phân giải và đặc tính của `System.currentTimeMillis()` (phụ thuộc OS clock tick) so với `System.nanoTime()` (đồng hồ xung nhịp phần cứng có độ chính xác cao).
-   - Đánh giá hiện tượng **Cold Start** (độ trễ lần gọi đầu tiên) và **Warm Access** (hiệu năng tra cứu khi đối tượng đã nằm trong bộ nhớ cache).
-4. **Tư duy phân tích đánh đổi (Architectural Trade-offs):** Rèn luyện năng lực đưa ra quyết định thiết kế phần mềm dựa trên các bằng chứng thực nghiệm cụ thể và bản chất của bài toán nghiệp vụ, thay vì áp dụng mẫu thiết kế một cách máy móc.
-
----
-
-## 2. ĐỀ BÀI
-
-### 2.1. Yêu cầu gốc từ giáo trình (Exercise 8 - Chapter 4)
+Đề bài yêu cầu:
 > *"Change the code written in Exercise 9 so that card flyweights are lazily created. Using [System.currentTimeMillis()](https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#currentTimeMillis--), compare the time needed to obtain all 52 cards for both approaches. What do you conclude?"*
 
-> [!NOTE]
-> **LÀM RÕ LỖI ĐÁNH MÁY TRONG ĐỀ BÀI (ERRATA ĐÃ XÁC NHẬN):**  
-> Cụm từ *"written in Exercise 9"* trong đề bài là một lỗi ấn bản đã được tác giả Martin P. Robillard xác nhận. Trong danh mục bài tập Chapter 4:
-> - **Exercise 7:** Cài đặt Flyweight cho `Card` bằng phương pháp khởi tạo sẵn (Pre-initialization / Eager) dùng `Map`.
-> - **Exercise 8:** Chuyển đổi mã nguồn khởi tạo sẵn đó sang khởi tạo lười (Lazy Creation) và so sánh thời gian lấy 52 lá bài.
-> - **Exercise 9:** Là bài độc lập yêu cầu cài đặt Singleton cho lớp `GameModel`.
-> 
-> Vì vậy, đề bài 8 thực chất yêu cầu sửa đổi lớp quân bài `Card` từ chiến lược Eager sang Lazy và so sánh hiệu năng của hai cách tiếp cận này.
+### 1. Làm rõ lỗi đánh máy của giáo trình (Errata)
+Cụm từ *"written in Exercise 9"* là một lỗi ấn bản đã được tác giả Martin P. Robillard xác nhận:
+- **Exercise 7:** Yêu cầu cài đặt mẫu Flyweight cho lớp `Card` theo phương pháp **Khởi tạo sớm (Pre-initialization / Eager)** dùng `Map`.
+- **Exercise 8:** Yêu cầu chuyển đổi mã nguồn khởi tạo sớm đó sang **Khởi tạo lười (Lazy Creation)**, sau đó dùng `System.currentTimeMillis()` so sánh thời gian lấy đủ 52 lá bài của cả 2 cách.
+- **Exercise 9:** Là bài độc lập yêu cầu cài đặt mẫu **Singleton** cho lớp `GameModel`.
 
-### 2.2. Minh họa đầu vào và đầu ra kỳ vọng
-- **Đầu vào (Input):** Yêu cầu truy xuất quân bài thông qua phương thức tĩnh `Card.get(pRank, pSuit)` với 13 thứ hạng `Rank` (ACE đến KING) và 4 chất `Suit` (CLUBS, DIAMONDS, SPADES, HEARTS).
-- **Đầu ra kỳ vọng (Expected Output):**
-  1. *Đảm bảo tính chất Flyweight:* Hai lời gọi cùng giá trị `Card.get(Rank.ACE, Suit.CLUBS) == Card.get(Rank.ACE, Suit.CLUBS)` phải trả về `true` (chia sẻ chung một tham chiếu vùng nhớ duy nhất).
-  2. *Dữ liệu đo lường thời gian:* Thời gian cần thiết để lấy trọn vẹn 52 lá bài giữa hai cách tiếp cận (Eager vs Lazy) được đo lường bằng `System.currentTimeMillis()` và `System.nanoTime()` ở các kịch bản Cold Start, Warm Access và lặp số lượng lớn ($100,000$ và $1,000,000$ lượt).
-  3. *Kết luận thiết kế:* Đưa ra câu trả lời thuyết phục, có dẫn chứng số liệu cho câu hỏi *"What do you conclude?"*.
+Do đó, đề bài 8 thực chất yêu cầu xây dựng và so sánh hiệu năng giữa hai cách tiếp cận: **Eager Pre-initialization** và **Lazy Creation** của Flyweight `Card`.
+
+### 2. Nội dung trọng tâm cần đạt:
+1. Cài đặt lớp `CardLazy` áp dụng mẫu Flyweight theo cơ chế Lazy Creation (khởi tạo theo nhu cầu).
+2. Xây dựng lớp đối chứng `CardEager` theo cơ chế Pre-initialization để so sánh trực tiếp.
+3. Sử dụng `System.currentTimeMillis()` (kết hợp `System.nanoTime()`) đo đạc thời gian lấy trọn vẹn 52 lá bài ở cả hai giai đoạn: Cold Start (lần đầu) và Warm Access (các lần tiếp theo).
+4. Thực hiện benchmark lặp số lượng lớn ($100,000$ và $1,000,000$ lần) để ghi nhận số liệu milisecond rõ ràng.
+5. Đưa ra câu trả lời toàn diện cho câu hỏi trọng tâm: *"What do you conclude?"*.
 
 ---
 
-## 3. PHÂN TÍCH & THIẾT KẾ
+## II. PHÂN TÍCH MÃ NGUỒN VÀ CẤU TRÚC BÀI LÀM
 
-### 3.1. Phân tích bài toán và luồng xử lý
-Bộ bài Tây chuẩn quốc tế bao gồm đúng $13 \times 4 = 52$ lá bài bất biến.
-- Nếu không áp dụng Flyweight: Mỗi lần một lá bài được chia hoặc rút ra, ứng dụng lại gọi `new Card()`. Điều này gây lãng phí bộ nhớ và tạo áp lực liên tục lên Garbage Collector.
-- Áp dụng Flyweight: Chỉ duy trì đúng 52 đối tượng `Card` dùng chung trong một kho lưu trữ (**Flyweight Store**).
+### 1. Danh mục các file trong thư mục `Exercise08_Flyweight`:
 
-#### So sánh luồng xử lý giữa Eager và Lazy:
+| STT | Tên file | Nguồn gốc | Vai trò / Mô tả |
+|:---:|:---|:---:|:---|
+| 1 | `Rank.java` | File gốc chương 4 | Enum định nghĩa 13 thứ hạng quân bài (`ACE` đến `KING`). |
+| 2 | `Suit.java` | File gốc chương 4 | Enum định nghĩa 4 chất quân bài (`CLUBS`, `DIAMONDS`, `SPADES`, `HEARTS`). |
+| 3 | **`CardLazy.java`** | **File trọng tâm nộp bài** | Cài đặt Flyweight theo cơ chế **Lazy Creation** (khởi tạo lười theo nhu cầu qua `CardLazy.get`). |
+| 4 | **`CardEager.java`** | **File đối chứng** | Cài đặt Flyweight theo cơ chế **Eager Pre-initialization** (khởi tạo sẵn 52 lá bài trong khối `static`). |
+| 5 | `Exercise08.java` | File kiểm thử chuẩn | Kiểm tra tính duy nhất (Object Identity `==`) theo đúng cấu trúc lời giải của tác giả giáo trình. |
+| 6 | **`Exercise08Comparison.java`** | **File đo đạc hiệu năng** | Chương trình Benchmark chi tiết: đo Cold Start, Warm Access, và chạy $100,000$ & $1,000,000$ lượt lặp. |
+| 7 | `run.bat` | File tiện ích | Kịch bản tự động biên dịch UTF-8 và chạy chương trình trên Windows. |
+| 8 | `generate_docx.py` | File tiện ích | Script tự động tạo báo cáo Word định dạng học thuật chuẩn. |
+| 9 | `README.md` | Tài liệu dự án | Hướng dẫn kỹ thuật, phân tích kiến trúc, kết quả đo đạc và kết luận. |
 
-```mermaid
-graph TD
-    subgraph Eager Pre-initialization
-        A1[JVM nạp lớp CardEager] --> B1[Thực thi khối static]
-        B1 --> C1[Khởi tạo trước toàn bộ 52 đối tượng CardEager]
-        C1 --> D1[Lưu đầy đủ vào IdentityHashMap]
-        D1 --> E1[Gọi get: Tra cứu trực tiếp và trả về đối tượng]
-    end
+---
 
-    subgraph Lazy Creation
-        A2[JVM nạp lớp CardLazy] --> B2[Chỉ tạo một IdentityHashMap rỗng]
-        B2 --> C2[Gọi get: Kiểm tra đối tượng đã có trong Map chưa?]
-        C2 -- Chưa có --> D2[Gọi new CardLazy và lưu vào Map]
-        C2 -- Đã có --> E2[Lấy đối tượng sẵn có từ Map]
-        D2 --> F2[Trả về đối tượng]
-        E2 --> F2
-    end
+## III. NỘI DUNG CÀI ĐẶT MÃ NGUỒN
+
+### 1. Cài đặt Lazy Creation (`CardLazy.java`)
+Theo đúng mã giải pháp chuẩn `designbook.solutions4.Card8` của tác giả giáo trình:
+```java
+package exercise08;
+
+import java.util.IdentityHashMap;
+import java.util.Map;
+
+public class CardLazy {
+
+	private static final Map<Rank, Map<Suit, CardLazy>> CARDS = new IdentityHashMap<>();
+	private final Rank aRank;
+	private final Suit aSuit;
+
+	private CardLazy(Rank pRank, Suit pSuit) {
+		assert pRank != null && pSuit != null;
+		aRank = pRank;
+		aSuit = pSuit;
+	}
+
+	public static CardLazy get(Rank pRank, Suit pSuit) {
+		assert pRank != null && pSuit != null;
+		Map<Suit, CardLazy> innerMap = CARDS.getOrDefault(pRank, new IdentityHashMap<>());
+		CARDS.putIfAbsent(pRank, innerMap);
+		if (!innerMap.containsKey(pSuit)) {
+			innerMap.put(pSuit, new CardLazy(pRank, pSuit)); // Khởi tạo lười theo nhu cầu
+		}
+		return innerMap.get(pSuit);
+	}
+
+	public static int getCreatedCount() {
+		int count = 0;
+		for (Map<Suit, CardLazy> innerMap : CARDS.values()) {
+			count += innerMap.size();
+		}
+		return count;
+	}
+
+	public Rank rank() { return aRank; }
+	public Suit suit() { return aSuit; }
+
+	@Override
+	public String toString() {
+		return String.format("%s of %s", aRank, aSuit);
+	}
+}
 ```
 
-### 3.2. Sơ đồ lớp UML (Class Diagram)
+### 2. Cài đặt Eager Pre-initialization (`CardEager.java`)
+```java
+package exercise08;
+
+import java.util.IdentityHashMap;
+import java.util.Map;
+
+public class CardEager {
+
+	private static final Map<Rank, Map<Suit, CardEager>> CARDS = new IdentityHashMap<>();
+	private final Rank aRank;
+	private final Suit aSuit;
+
+	// Khởi tạo sớm toàn bộ 52 đối tượng lúc nạp lớp (Class Loading)
+	static {
+		for (Rank rank : Rank.values()) {
+			Map<Suit, CardEager> innerMap = new IdentityHashMap<>();
+			for (Suit suit : Suit.values()) {
+				innerMap.put(suit, new CardEager(rank, suit));
+			}
+			CARDS.put(rank, innerMap);
+		}
+	}
+
+	private CardEager(Rank pRank, Suit pSuit) {
+		assert pRank != null && pSuit != null;
+		aRank = pRank;
+		aSuit = pSuit;
+	}
+
+	public static CardEager get(Rank pRank, Suit pSuit) {
+		assert pRank != null && pSuit != null;
+		return CARDS.get(pRank).get(pSuit); // Truy xuất trực tiếp, không cần kiểm tra
+	}
+
+	public Rank rank() { return aRank; }
+	public Suit suit() { return aSuit; }
+
+	@Override
+	public String toString() {
+		return String.format("%s of %s", aRank, aSuit);
+	}
+}
+```
+
+---
+
+## IV. GIẢI THÍCH GIẢI PHÁP THIẾT KẾ (FLYWEIGHT PATTERN)
+
+### 1. Bản chất mẫu Flyweight
+- **Mục đích:** Tối ưu hóa bộ nhớ bằng cách chia sẻ tối đa các đối tượng có cùng trạng thái nội tại (**Intrinsic State** - bất biến, độc lập ngữ cảnh) thay vì tạo mới hàng loạt đối tượng chứa dữ liệu trùng lặp.
+- **Trạng thái quân bài:**
+  - `Rank` (13 giá trị) và `Suit` (4 giá trị) là trạng thái nội tại cố định.
+  - Tổng số tổ hợp hợp lệ là đúng $13 \times 4 = 52$ lá bài. Mỗi lá bài là một đối tượng bất biến (Immutable Object).
+
+### 2. So sánh kiến trúc: Eager Pre-initialization vs Lazy Creation
+
+| Tiêu chí so sánh | Eager Pre-initialization (`CardEager`) | Lazy Creation (`CardLazy`) |
+| :--- | :--- | :--- |
+| **Thời điểm cấp phát** | Toàn bộ 52 lá bài tạo sẵn lúc nạp lớp (Class Loading) qua khối `static`. | Từng lá bài được tạo khi được gọi qua `get(rank, suit)` lần đầu tiên. |
+| **Bộ nhớ ban đầu** | Tiêu tốn ngay lượng RAM cho 52 đối tượng (khoảng vài KB). | Bộ nhớ ban đầu tối thiểu (Map rỗng); tăng dần khi có yêu cầu. |
+| **Độ trễ lần đầu (Cold Start)** | Rất nhanh vì đối tượng đã sẵn sàng, hàm `get` chỉ tra cứu Map. | Chậm hơn do phải cấp phát `new Card` và cập nhật `IdentityHashMap`. |
+| **Tốc độ lần sau (Warm Access)** | Nhanh hơn do tra cứu Map trực tiếp không cần kiểm tra điều kiện. | Chậm hơn do phải kiểm tra điều kiện branching (`containsKey`) ở mỗi lần gọi. |
+| **An toàn đa luồng (Thread-Safety)** | An toàn tuyệt đối ngầm định nhờ cơ chế Class Loading đồng bộ của JVM. | Dễ xảy ra Race Condition nếu nhiều luồng cùng gọi `get` lúc chưa có đối tượng. |
+
+---
+
+## V. SƠ ĐỒ LỚP UML (CLASS DIAGRAM)
 
 ```mermaid
 classDiagram
@@ -143,162 +217,20 @@ classDiagram
 
 ---
 
-## 4. CƠ SỞ LÝ THUYẾT
+## VI. KIỂM THỬ VÀ KẾT QUẢ THỰC NGHIỆM
 
-### 4.1. Mẫu thiết kế Flyweight (GoF Structural Design Pattern)
-Flyweight giải quyết bài toán tối ưu hóa tài nguyên bằng cách chia sẻ các đối tượng có cùng trạng thái. Cấu trúc Flyweight chia dữ liệu đối tượng làm 2 phần:
-- **Intrinsic State (Trạng thái nội tại):** Là các thông tin độc lập với ngữ cảnh của đối tượng, bất biến và có thể chia sẻ (trong bài này là `Rank` và `Suit`).
-- **Extrinsic State (Trạng thái ngoại tại):** Là thông tin phụ thuộc vào ngữ cảnh sử dụng (ví dụ: quân bài nằm ở bộ bài nào, úp hay ngửa, tọa độ hiển thị trên màn hình). Extrinsic state do client lưu trữ và truyền vào các phương thức khi cần thao tác.
-
-### 4.2. Đặc tính của cấu trúc dữ liệu `IdentityHashMap` trong Java
-- Khác với `HashMap` thông thường (so sánh khóa bằng `equals()` và `hashCode()`), `IdentityHashMap` sử dụng **Reference-Equality (`==`)** và `System.identityHashCode()`.
-- Vì `Rank` và `Suit` là các kiểu liệt kê Enum (trong máy ảo JVM, mỗi hằng số enum là duy nhất và bất biến), việc sử dụng `IdentityHashMap` giúp loại bỏ hoàn toàn chi phí gọi hàm `equals()` và xử lý va chạm băm phức tạp, mang lại tốc độ truy xuất cực nhanh.
-
-### 4.3. Độ phân giải thời gian: `System.currentTimeMillis()` và `System.nanoTime()`
-- **`System.currentTimeMillis()`:** Đo thời gian theo đồng hồ thế giới thực (Wall-clock time) tính từ Unix Epoch. Hàm này phụ thuộc vào chu kỳ ngắt đồng hồ của hệ điều hành (Clock tick granularity). Trên Windows, độ phân giải thường dao động trong khoảng từ **1 ms đến 15.6 ms**. Các tác vụ ngắn hơn ngưỡng này sẽ được làm tròn về 0 ms.
-- **`System.nanoTime()`:** Sử dụng bộ đếm chu kỳ xung nhịp phần cứng có độ phân giải cao nhất của hệ thống (High-resolution hardware timer), trả về giá trị nanosecond tương đối. Đây là công cụ tiêu chuẩn để đo lường các tác vụ microsecond/nanosecond.
-
----
-
-## 5. MÃ NGUỒN VÀ GIẢI THÍCH
-
-### 5.1. Lớp [CardLazy.java](file:///d:/MY%20STUDY/HK1_4/THIET_KE/Post_Class_05/Exercise08_Flyweight/CardLazy.java) (Hiện thực Flyweight khởi tạo lười)
-```java
-package exercise08;
-
-import java.util.IdentityHashMap;
-import java.util.Map;
-
-/**
- * Cài đặt mẫu Flyweight cho quân bài theo chiến lược LAZY INITIALIZATION.
- * Đối tượng chỉ được tạo khi có yêu cầu lần đầu tiên qua hàm get().
- * (Theo cấu trúc giải pháp Card8 của tác giả giáo trình)
- */
-public class CardLazy {
-
-	// Flyweight Store lưu trữ các lá bài đã được khởi tạo theo nhu cầu
-	private static final Map<Rank, Map<Suit, CardLazy>> CARDS = new IdentityHashMap<>();
-
-	private final Rank aRank;
-	private final Suit aSuit;
-
-	// Constructor private đảm bảo tính đóng gói tuyệt đối của Flyweight
-	private CardLazy(Rank pRank, Suit pSuit) {
-		assert pRank != null && pSuit != null;
-		aRank = pRank;
-		aSuit = pSuit;
-	}
-
-	/**
-	 * Flyweight Factory Method: Khởi tạo lười (On-demand)
-	 */
-	public static CardLazy get(Rank pRank, Suit pSuit) {
-		assert pRank != null && pSuit != null;
-		Map<Suit, CardLazy> innerMap = CARDS.getOrDefault(pRank, new IdentityHashMap<>());
-		CARDS.putIfAbsent(pRank, innerMap);
-		if (!innerMap.containsKey(pSuit)) {
-			innerMap.put(pSuit, new CardLazy(pRank, pSuit));
-		}
-		return innerMap.get(pSuit);
-	}
-
-	public static int getCreatedCount() {
-		int count = 0;
-		for (Map<Suit, CardLazy> innerMap : CARDS.values()) {
-			count += innerMap.size();
-		}
-		return count;
-	}
-
-	public Rank rank() { return aRank; }
-	public Suit suit() { return aSuit; }
-
-	@Override
-	public String toString() {
-		return String.format("%s of %s", aRank, aSuit);
-	}
-}
-```
-**Giải thích chi tiết:**
-- `CARDS` ban đầu là một Map rỗng, chưa chứa bất kỳ đối tượng `CardLazy` nào.
-- Khi gọi `CardLazy.get(pRank, pSuit)`:
-  1. `innerMap = CARDS.getOrDefault(...)` và `putIfAbsent`: Lấy hoặc tạo mới bảng băm tương ứng với `pRank`.
-  2. `if (!innerMap.containsKey(pSuit))`: Kiểm tra xem lá bài với chất `pSuit` đã tồn tại hay chưa. Nếu chưa, gọi `new CardLazy(pRank, pSuit)` để cấp phát bộ nhớ và đưa vào Map.
-  3. `innerMap.get(pSuit)`: Trả về thể hiện duy nhất đã lưu trong cache.
-
----
-
-### 5.2. Lớp [CardEager.java](file:///d:/MY%20STUDY/HK1_4/THIET_KE/Post_Class_05/Exercise08_Flyweight/CardEager.java) (Hiện thực Flyweight khởi tạo sớm)
-```java
-package exercise08;
-
-import java.util.IdentityHashMap;
-import java.util.Map;
-
-/**
- * Cài đặt mẫu Flyweight cho quân bài theo chiến lược EAGER INITIALIZATION.
- * Toàn bộ 52 lá bài được tạo sẵn ngay khi nạp lớp thông qua khối static.
- */
-public class CardEager {
-
-	private static final Map<Rank, Map<Suit, CardEager>> CARDS = new IdentityHashMap<>();
-
-	private final Rank aRank;
-	private final Suit aSuit;
-
-	// Khối khởi tạo tĩnh: Cấp phát toàn bộ 52 đối tượng trước
-	static {
-		for (Rank rank : Rank.values()) {
-			Map<Suit, CardEager> innerMap = new IdentityHashMap<>();
-			for (Suit suit : Suit.values()) {
-				innerMap.put(suit, new CardEager(rank, suit));
-			}
-			CARDS.put(rank, innerMap);
-		}
-	}
-
-	private CardEager(Rank pRank, Suit pSuit) {
-		assert pRank != null && pSuit != null;
-		aRank = pRank;
-		aSuit = pSuit;
-	}
-
-	public static CardEager get(Rank pRank, Suit pSuit) {
-		assert pRank != null && pSuit != null;
-		return CARDS.get(pRank).get(pSuit); // Truy xuất trực tiếp, không cần kiểm tra
-	}
-
-	public Rank rank() { return aRank; }
-	public Suit suit() { return aSuit; }
-
-	@Override
-	public String toString() {
-		return String.format("%s of %s", aRank, aSuit);
-	}
-}
-```
-**Giải thích chi tiết:**
-- Khối `static {}` được JVM thực thi đồng bộ khi nạp lớp vào bộ nhớ. Toàn bộ $13 \times 4 = 52$ thể hiện của `CardEager` được tạo sẵn.
-- Phương thức `get(pRank, pSuit)` chỉ thực hiện thao tác tra cứu trực tiếp trong cấu trúc Map 2 tầng mà không phải tốn chi phí kiểm tra điều kiện rẽ nhánh (`if`).
-
----
-
-## 6. KIỂM THỬ VÀ KẾT QUẢ THỰC NGHIỆM
-
-### 6.1. Bảng ma trận các trường hợp kiểm thử (Test Matrix)
+### 1. Bảng ma trận các kịch bản kiểm thử:
 
 | Mã test | Kịch bản kiểm thử | Dữ liệu đầu vào / Thao tác | Kết quả kỳ vọng | Kết quả thực tế | Trạng thái |
 | :---: | :---| :---| :---| :---| :---: |
-| **TC01** | Kiểm tra tính duy nhất (Flyweight Identity) của `CardEager` | Gọi `CardEager.get(ACE, SPADES)` 2 lần liên tiếp | Hai tham chiếu bằng nhau (`==` trả về `true`) | `true` | **PASS** |
-| **TC02** | Kiểm tra tính duy nhất (Flyweight Identity) của `CardLazy` | Gọi `CardLazy.get(ACE, SPADES)` 2 lần liên tiếp | Hai tham chiếu bằng nhau (`==` trả về `true`), chỉ có 1 đối tượng được tạo | `true`, số lượng đối tượng = 1 | **PASS** |
-| **TC03** | Đo thời gian lấy 52 lá lần đầu (Cold Start) | Duyệt qua toàn bộ 52 cặp (Rank, Suit) lần đầu | `currentTimeMillis` ghi nhận 0 ms; `nanoTime` cho thấy Eager nhanh hơn Lazy | Eager: 0 ms (47.3 µs)<br>Lazy: 0 ms (48.9 µs) | **PASS** |
+| **TC01** | Kiểm tra tính duy nhất của `CardEager` | Gọi `CardEager.get(ACE, SPADES)` 2 lần liên tiếp | Hai tham chiếu bằng nhau (`==` trả về `true`) | `true` | **PASS** |
+| **TC02** | Kiểm tra tính duy nhất của `CardLazy` | Gọi `CardLazy.get(ACE, SPADES)` 2 lần liên tiếp | Hai tham chiếu bằng nhau (`==` trả về `true`), chỉ có 1 đối tượng được tạo | `true`, số lượng = 1 | **PASS** |
+| **TC03** | Đo thời gian lấy 52 lá lần đầu (Cold Start) | Duyệt qua toàn bộ 52 cặp (Rank, Suit) lần đầu | `currentTimeMillis` ghi nhận 0 ms; `nanoTime` cho thấy Eager nhanh hơn | Eager: 0 ms (47.3 µs)<br>Lazy: 0 ms (48.9 µs) | **PASS** |
 | **TC04** | Đo thời gian lấy 52 lá lần sau (Warm Access) | Duyệt qua toàn bộ 52 lá khi cache đã chứa đủ 52 đối tượng | Cả 2 đều có sẵn trong cache; Eager nhanh hơn do không rẽ nhánh `containsKey` | Eager: 11.2 µs<br>Lazy: 21.2 µs | **PASS** |
 | **TC05** | Benchmark quy mô $100,000$ lượt lặp (5.2M gets) | Lặp lấy 52 lá bài $100,000$ lần liên tục | `currentTimeMillis` ghi nhận số mili-giây rõ ràng; Eager nhanh hơn | Eager: 47 ms<br>Lazy: 53 ms (Lazy chậm hơn 12.8%) | **PASS** |
 | **TC06** | Benchmark quy mô $1,000,000$ lượt lặp (52M gets) | Lặp lấy 52 lá bài $1,000,000$ lần liên tục | Ghi nhận thời gian chính xác, loại trừ nhiễu JIT | Eager: 277 ms<br>Lazy: 379 ms (Lazy chậm hơn 36.8%) | **PASS** |
 
-### 6.2. Kết quả console thực thi chương trình thực tế
-Kết quả thu được khi chạy [Exercise08Comparison.java](file:///d:/MY%20STUDY/HK1_4/THIET_KE/Post_Class_05/Exercise08_Flyweight/Exercise08Comparison.java):
-
+### 2. Kết quả chạy thực tế trên Console (`run.bat`):
 ```text
 ============================================================================
    BÀI TẬP 8 (EXERCISE 08): SO SÁNH FLYWEIGHT EAGER VS LAZY INITIALIZATION  
@@ -333,22 +265,27 @@ Kết quả thu được khi chạy [Exercise08Comparison.java](file:///d:/MY%20
 
 ---
 
-## 7. KẾT LUẬN (TRẢ LỜI CÂU HỎI ĐỀ BÀI: WHAT DO YOU CONCLUDE?)
+## VII. KẾT LUẬN (TRẢ LỜI CÂU HỎI ĐỀ BÀI: WHAT DO YOU CONCLUDE?)
 
-Dựa trên cơ sở lý thuyết kiến trúc và dữ liệu đo đạc thực nghiệm, sinh viên rút ra **3 kết luận mang tính cốt lõi**:
+1. **Về công cụ đo lường `System.currentTimeMillis()`:**
+   - Hàm `System.currentTimeMillis()` có độ phân giải thô (~1–15 ms), hoàn toàn không phù hợp để đo lường các tác vụ vi mô như việc lấy 52 phần tử trong bộ nhớ (chỉ mất $0.01 - 0.05$ ms). Đo 1 lần duy nhất sẽ luôn trả về `0 ms`.
+   - Cần kết hợp `System.nanoTime()` hoặc chạy lặp lại số lượng lớn ($100,000$ đến $1,000,000$ lần) để tổng thời gian tích lũy vượt qua độ phân giải của hệ điều hành.
+2. **Về so sánh hiệu năng giữa Eager và Lazy:**
+   - **Lần đầu (Cold Start):** Eager vượt trội vì chuyển toàn bộ gánh nặng cấp phát bộ nhớ sang lúc nạp lớp (Class Loading). Lazy vừa tra cứu vừa cấp phát `new Card` và mở rộng Map, gây ra độ trễ đột biến (Latency Spike).
+   - **Các lần sau (Warm Access):** Eager vẫn nhanh hơn Lazy từ 30% đến 40% do tra cứu Map trực tiếp, không phải tốn thêm chi phí kiểm tra điều kiện rẽ nhánh `containsKey`.
+3. **Về quyết định thiết kế kiến trúc phần mềm:**
+   - Với bài toán bộ bài Tây (`Card`), **Eager Pre-initialization là giải pháp vượt trội hoàn toàn**: vừa tốn ít RAM (vài KB), vừa nhanh hơn, vừa an toàn đa luồng tự nhiên mà không cần đồng bộ hóa phức tạp.
+   - Lazy Creation chỉ nên áp dụng khi tập đối tượng Flyweight rất lớn (hàng triệu đối tượng nặng) và ứng dụng thực tế chỉ sử dụng một phần nhỏ trong số chúng.
 
-### 7.1. Kết luận về công cụ đo lường `System.currentTimeMillis()`
-- Hàm `System.currentTimeMillis()` có độ phân giải thô (~1 ms đến 15.6 ms), **hoàn toàn không phù hợp để đo lường các tác vụ vi mô (micro-benchmarking)** như việc duyệt 52 tham chiếu trong bộ nhớ (chỉ mất $0.01 - 0.05$ ms). Nếu đo 1 lần duy nhất, kết quả luôn là `0 ms`.
-- Khi cần đo lường chính xác các tác vụ cấp độ vi mô trong Java, bắt buộc phải dùng `System.nanoTime()` hoặc phải chạy lặp với số lượng mẫu đủ lớn (từ 100,000 lần trở lên) để thời gian tích lũy vượt qua độ phân giải của đồng hồ hệ điều hành.
+---
 
-### 7.2. Kết luận về so sánh hiệu năng giữa Eager và Lazy
-- **Ở lần chạy đầu tiên (Cold Start):** Eager có lợi thế lớn vì đã chuyển toàn bộ chi phí cấp phát đối tượng sang thời điểm nạp lớp (Class Loading). Ngược lại, Lazy phải vừa tra cứu, vừa cấp phát `new Card` và mở rộng bảng băm ngay trong luồng thực thi, gây ra hiện tượng **độ trễ đột biến (Latency Spike)**.
-- **Ở các lần truy xuất tiếp theo (Warm Access & Throughput):** Eager vẫn nhanh hơn Lazy từ **30% đến 40%**. Lý do là vì Lazy luôn phải thực hiện phép kiểm tra điều kiện rẽ nhánh `if (!innerMap.containsKey(pSuit))` ở mỗi lần gọi hàm, tạo ra chi phí branching overhead lặp đi lặp lại.
+## VIII. HƯỚNG DẪN BIÊN DỊCH VÀ CHẠY
 
-### 7.3. Kết luận về quyết định thiết kế kiến trúc phần mềm
-- **Đối với bài toán lá bài (`Card`): Chiến lược Eager Pre-initialization là sự lựa chọn vượt trội hoàn toàn:**
-  1. *Số lượng phần tử nhỏ và cố định:* Bộ bài Tây chỉ có đúng 52 phần tử, tiêu tốn chưa đến vài Kilobytes RAM – quá nhỏ để phải bận tâm về việc tiết kiệm bộ nhớ.
-  2. *Đặc thù nghiệp vụ:* Khi bắt đầu một ván bài (khởi tạo `Deck`), hầu như toàn bộ 52 lá bài đều sẽ được rút hoặc xáo. Dùng Lazy thì cuối cùng 52 lá vẫn được tạo ra, nhưng lại phải chịu thêm chi phí kiểm tra lặp lại nhiều lần.
-  3. *An toàn đa luồng (Thread-safety):* Khối `static` của Eager được máy ảo JVM bảo đảm an toàn đa luồng tự nhiên mà không cần dùng từ khóa `synchronized` hay cơ chế khóa phức tạp.
-- **Phạm vi áp dụng của Lazy Creation:**  
-  Lazy Creation chỉ thực sự phát huy giá trị khi tập đối tượng Flyweight **rất lớn (hàng triệu đối tượng)** hoặc **chi phí khởi tạo mỗi đối tượng rất đắt đỏ** (đọc file đồ họa độ phân giải cao, kết nối mạng), VÀ ứng dụng trong thực tế **chỉ sử dụng một phần rất nhỏ** trong số các đối tượng đó.
+1. **Chạy tự động:** Nhấp đúp chuột vào file [run.bat](file:///d:/MY%20STUDY/HK1_4/THIET_KE/Post_Class_05/Exercise08_Flyweight/run.bat).
+2. **Chạy thủ công qua dòng lệnh:**
+```powershell
+cd "Exercise08_Flyweight"
+javac -encoding UTF-8 -d . *.java
+java -Dfile.encoding=UTF-8 exercise08.Exercise08
+java -Dfile.encoding=UTF-8 exercise08.Exercise08Comparison
+```
