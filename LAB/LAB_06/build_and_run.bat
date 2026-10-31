@@ -1,10 +1,10 @@
-@echo off
+﻿@echo off
 chcp 65001 > nul
 cd /d "%~dp0"
 if not exist "bin" mkdir "bin"
 
 echo ================================================================================
-echo                     BUILD AND RUN AUTOMATION: LAB                            
+echo                     BUILD AND RUN AUTOMATION: LAB_06                           
 echo         BiCardSource Unit Testing with Stubs and 100%% Branch Coverage          
 echo ================================================================================
 echo.

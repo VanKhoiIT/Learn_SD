@@ -1,8 +1,8 @@
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+﻿[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $ErrorActionPreference = "Stop"
 
 Write-Host "================================================================================" -ForegroundColor Cyan
-Write-Host "                     BUILD AND RUN AUTOMATION: LAB                            " -ForegroundColor Cyan
+Write-Host "                     BUILD AND RUN AUTOMATION: LAB_06                           " -ForegroundColor Cyan
 Write-Host "         BiCardSource Unit Testing with Stubs and 100% Branch Coverage          " -ForegroundColor Cyan
 Write-Host "================================================================================" -ForegroundColor Cyan
 
