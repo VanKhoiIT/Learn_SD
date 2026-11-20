@@ -1,0 +1,51 @@
+sequenceDiagram
+    autonumber
+    actor Client as KhachHang
+    participant Processor as OrderProcessor
+    participant Subclass as ConcreteProcessor
+    participant Order as Order
+
+    Client->>Processor: processOrder(order)
+    activate Processor
+
+    Processor->>Processor: validateOrder(order)
+    Note over Processor: [Buoc chung 1] Kiem tra dia chi, gio hang
+
+    Processor->>Processor: applyDiscounts(order)
+    Note over Processor: [Buoc chung 2] Tinh voucher giam gia
+
+    Processor->>Subclass: processPayment(order)
+    activate Subclass
+    Note over Subclass: [Buoc rieng 3] Tru tien the / Vi / Stripe USD
+    Subclass-->>Processor: true
+    deactivate Subclass
+
+    Processor->>Subclass: packItems(order)
+    activate Subclass
+    Note over Subclass: [Buoc rieng 4] Carton / Uu tien 2H / IATA / Key
+    deactivate Subclass
+
+    Processor->>Subclass: isGiftWrappingRequested(order)
+    activate Subclass
+    Subclass-->>Processor: true / false
+    deactivate Subclass
+    opt Neu co yeu cau goi qua
+        Processor->>Processor: wrapGift(order)
+    end
+
+    Processor->>Subclass: assignCarrier(order)
+    activate Subclass
+    Note over Subclass: [Buoc rieng 5] GHTK / GrabExpress / DHL / Cloud
+    Subclass-->>Processor: trackingCode
+    deactivate Subclass
+
+    Processor->>Processor: sendNotification(order)
+    Note over Processor: [Buoc chung 6] Gui hoa don dien tu e-Invoice
+
+    Processor->>Subclass: postProcessing(order)
+    activate Subclass
+    Note over Subclass: [Hook rieng 7] Tich diem / Bao hiem / Hai quan
+    deactivate Subclass
+
+    Processor-->>Client: OrderResult (Thanh cong, Tracking, Logs)
+    deactivate Processor

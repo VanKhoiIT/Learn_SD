@@ -1,0 +1,101 @@
+classDiagram
+    direction TB
+
+    class OrderProcessor {
+        <<abstract>>
+        +processOrder(Order order) OrderResult
+        #validateOrder(Order order) boolean
+        #applyDiscounts(Order order) void
+        #sendNotification(Order order) void
+        #processPayment(Order order) boolean
+        #packItems(Order order) void
+        #assignCarrier(Order order) String
+        #isGiftWrappingRequested(Order order) boolean
+        #wrapGift(Order order) void
+        #postProcessing(Order order) void
+    }
+
+    class StandardOrderProcessor {
+        #processPayment(Order order) boolean
+        #packItems(Order order) void
+        #assignCarrier(Order order) String
+        #postProcessing(Order order) void
+    }
+
+    class ExpressOrderProcessor {
+        #processPayment(Order order) boolean
+        #packItems(Order order) void
+        #assignCarrier(Order order) String
+        #isGiftWrappingRequested(Order order) boolean
+        #postProcessing(Order order) void
+    }
+
+    class InternationalOrderProcessor {
+        -double EXCHANGE_RATE_VND_TO_USD
+        #processPayment(Order order) boolean
+        #packItems(Order order) void
+        #assignCarrier(Order order) String
+        #postProcessing(Order order) void
+    }
+
+    class DigitalOrderProcessor {
+        -String generatedLicenseKey
+        #processPayment(Order order) boolean
+        #packItems(Order order) void
+        #assignCarrier(Order order) String
+        #isGiftWrappingRequested(Order order) boolean
+        #postProcessing(Order order) void
+    }
+
+    class Order {
+        -String orderId
+        -String customerName
+        -String customerEmail
+        -String shippingAddress
+        -OrderType orderType
+        -List items
+        -double discountAmount
+        -boolean giftWrappingRequested
+        -boolean isPaid
+        -String trackingCode
+        +addItem(OrderItem item) void
+        +getSubtotal() double
+        +getFinalTotal() double
+        +applyDiscount(String code, double amount) void
+        +addLog(String message) void
+    }
+
+    class OrderItem {
+        -String productName
+        -int quantity
+        -double unitPrice
+        +getTotalPrice() double
+    }
+
+    class OrderResult {
+        -boolean success
+        -String orderId
+        -String trackingNumber
+        -String message
+        -LocalDateTime processedAt
+        -List logs
+        +printSummary() void
+    }
+
+    class OrderType {
+        <<enumeration>>
+        STANDARD
+        EXPRESS
+        INTERNATIONAL
+        DIGITAL
+    }
+
+    OrderProcessor <|-- StandardOrderProcessor : extends
+    OrderProcessor <|-- ExpressOrderProcessor : extends
+    OrderProcessor <|-- InternationalOrderProcessor : extends
+    OrderProcessor <|-- DigitalOrderProcessor : extends
+
+    OrderProcessor ..> Order : processes
+    OrderProcessor ..> OrderResult : creates
+    Order o-- OrderItem : contains
+    Order --> OrderType : has

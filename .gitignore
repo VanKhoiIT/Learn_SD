@@ -1,1 +1,18 @@
+# Compiled bytecode & output directories
 *.class
+bin/
+target/
+
+# Python scripts & caches (AI / generator scratch files)
+*.py
+*.pyc
+__pycache__/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.iml
+
+# OS temporary files
+Thumbs.db
+.DS_Store
