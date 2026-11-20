@@ -105,12 +105,24 @@ LAB_09/
 │       ├── OrderProcessorTest.java             # 6 ca kiểm thử JUnit 5 chi tiết
 │       └── TestRunner.java                     # Bộ chạy test console độc lập
 │
-├── BAO_CAO_LAB_09_TEMPLATE_METHOD.docx         # Báo cáo chuẩn Word (2-3 trang chuyên nghiệp)
-├── ket_qua_thuc_nghiem.txt                     # Log kết quả thực nghiệm console
-├── anh_chup_ket_qua_thuc_nghiem.png            # Ảnh chụp màn hình kết quả chạy
+├── SAN_PHAM_NOP_BAI/                           # Toàn bộ sản phẩm nộp bài đã phân loại
+│   ├── 1_Bao_Cao/                              # Báo cáo chuẩn Word (2-3 trang chuyên nghiệp)
+│   │   └── BAO_CAO_LAB_09_TEMPLATE_METHOD.docx
+│   ├── 2_So_Do_UML/                            # Ảnh sơ đồ UML lớp và sơ đồ tuần tự
+│   │   ├── order_processor_class_diagram.png
+│   │   └── order_processor_sequence_diagram.png
+│   ├── 3_Ket_Qua_Thuc_Nghiem/                  # Ảnh chụp màn hình và log chạy thực nghiệm
+│   │   ├── anh_chup_ket_qua_thuc_nghiem.png
+│   │   └── ket_qua_thuc_nghiem.txt
+│   └── 4_Ma_Nguon_Java/                        # Toàn bộ mã nguồn Java chuẩn bị nộp
+│       ├── domain/
+│       ├── template/
+│       ├── concrete/
+│       └── MainDemo.java
+│
 ├── build_and_run.bat                           # Script tự động biên dịch và chạy demo + test
-├── run.bat                                     # Script chạy nhanh MainDemo
-├── test.bat                                    # Script chạy nhanh JUnit Test
+├── run.bat / run.ps1                           # Script chạy nhanh MainDemo
+├── test.bat / test.ps1                         # Script chạy nhanh JUnit Test
 ├── pom.xml                                     # File cấu hình Maven tiêu chuẩn
 └── README.md                                   # Tài liệu dự án
 ```
