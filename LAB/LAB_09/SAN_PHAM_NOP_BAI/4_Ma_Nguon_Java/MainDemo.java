@@ -97,7 +97,7 @@ public class MainDemo {
         result5.printSummary();
 
         System.out.println("\n================================================================================");
-        System.out.println("     KẾT THÚC THỰC NGHIỆM: CẢ 5 KỊCH BẢN ĐÃ VẬN HÀNH CHÍNH XÁC & HOÀN HẢO!     ");
+        System.out.println("     KẾT THÚC THỰC NGHIỆM: HOÀN TẤT MÔ PHỎNG 5 KỊCH BẢN XỬ LÝ ĐƠN HÀNG         ");
         System.out.println("================================================================================");
     }
 }
