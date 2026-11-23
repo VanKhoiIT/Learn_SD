@@ -110,11 +110,8 @@ class ObservableDeck1 {
 	}
 }
 
-/*
- * anchor: DrawLogger1
- * title: Concrete Observer
- * ---
- * This class is an example of _concrete observer_ in the design pattern.
+/**
+ * Concrete Observer in the Observer design pattern.
  */
 class DrawLogger1 implements DeckObserver1 {
 
